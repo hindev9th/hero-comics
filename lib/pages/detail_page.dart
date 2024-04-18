@@ -1,18 +1,30 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:test_app/config/colors.dart';
+import 'package:test_app/config/string.dart';
 import 'package:test_app/models/comic_model.dart';
+import 'package:test_app/responses/chapter_response.dart';
 import 'package:test_app/widgets/sidebar_chapter/sidebar_chapter.dart';
 
-class DetailPage extends StatelessWidget {
+
+
+class DetailPage extends StatefulWidget {
   final ComicModel comicModel;
   const DetailPage({super.key, required this.comicModel});
 
   @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
+  @override
   Widget build(BuildContext context) {
+    ComicModel comicModel = widget.comicModel;
     return Scaffold(
       backgroundColor: clPrimary,
-      endDrawer: const SidebarChapter(),
+      endDrawer:  SidebarChapter(apiChapter: comicModel.apiChapter ?? "",),
       floatingActionButton: FractionallySizedBox(
         widthFactor: 0.8,
         child: Row(
@@ -120,7 +132,7 @@ class DetailPage extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                comicModel.image,
+                widget.comicModel.image ?? "",
                 fit: BoxFit.fitWidth,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) {
@@ -169,9 +181,7 @@ class DetailPage extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        comicModel.chapterModel != null
-                            ? comicModel.chapterModel!.name
-                            : "Chapter 98",
+                        widget.comicModel.chapter?.name ?? "",
                         style: const TextStyle(color: Colors.white),
                       ),
                       const Text(" | ", style: TextStyle(color: Colors.white)),
@@ -186,7 +196,7 @@ class DetailPage extends StatelessWidget {
                             width: 2,
                           ),
                           Text(
-                            comicModel.view,
+                            widget.comicModel.view ?? "",
                             style: const TextStyle(color: Colors.white),
                           ),
                         ],
@@ -203,7 +213,7 @@ class DetailPage extends StatelessWidget {
                             width: 2,
                           ),
                           Text(
-                            comicModel.follow,
+                            widget.comicModel.follow ?? "",
                             style: const TextStyle(color: Colors.white),
                           ),
                         ],
@@ -214,7 +224,7 @@ class DetailPage extends StatelessWidget {
                     height: 25,
                   ),
                   Text(
-                    comicModel.name,
+                    widget.comicModel.name ?? "",
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -224,7 +234,7 @@ class DetailPage extends StatelessWidget {
                     height: 5,
                   ),
                   Text(
-                    comicModel.otherName,
+                    widget.comicModel.anotherName ?? "",
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -234,7 +244,7 @@ class DetailPage extends StatelessWidget {
                     height: 25,
                   ),
                   Text(
-                    comicModel.description,
+                    widget.comicModel.description ?? "",
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,

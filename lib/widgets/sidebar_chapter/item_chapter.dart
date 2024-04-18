@@ -12,7 +12,7 @@ class ItemChapter extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print("tap chapter" + chapterModel.name);
+        print("tap chapter" + (chapterModel.name ?? ""));
       },
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -27,11 +27,11 @@ class ItemChapter extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              chapterModel.name,
+              chapterModel.name ?? "",
               style: TextStyle(color: isSelected ? Colors.white : Colors.black),
             ),
             Text(
-              chapterModel.time,
+              chapterModel.time ?? "",
               style: TextStyle(color: isSelected ? Colors.white : Colors.black),
             ),
           ],

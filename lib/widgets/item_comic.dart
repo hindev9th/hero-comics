@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:test_app/config/colors.dart';
+import 'package:test_app/config/string.dart';
 import 'package:test_app/models/comic_model.dart';
 import 'package:test_app/pages/detail_page.dart';
 
@@ -31,29 +33,51 @@ class _ItemComicState extends State<ItemComic> {
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Image.network(
-              comicModel.image,
-            ),
-          ),
-          Positioned(
-            bottom: 30,
-            left: 10,
-            right: 10,
-            child: Text(
-              comicModel.name,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold),
+              comicModel.image ?? "",
+              height: 300,
+              fit: BoxFit.fitHeight,
             ),
           ),
           Positioned(
             bottom: 10,
             left: 10,
             right: 10,
+            height: 40,
             child: Text(
-              comicModel.name,
+              comicModel.name ?? "",
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.normal,
-                  fontSize: 12),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                shadows: <Shadow>[
+                  Shadow(
+                    offset: Offset(0.2, 0.1),
+                    blurRadius: 20.0,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 10,
+            left: 10,
+            right: 10,
+            child: Text(
+              comicModel.chapter!.name ?? "",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                shadows: <Shadow>[
+                  Shadow(
+                    offset: Offset(0.2, 0.1),
+                    blurRadius: 20.0,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

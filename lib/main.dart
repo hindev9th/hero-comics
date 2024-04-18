@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:test_app/widgets/bottom_navigation.dart';
 
-void main() {
+Future<void> main() async {
+  await dotenv.load();
+
   runApp(const MyApp());
 }
 
