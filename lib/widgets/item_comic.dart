@@ -1,9 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:test_app/config/colors.dart';
-import 'package:test_app/config/string.dart';
 import 'package:test_app/models/comic_model.dart';
 import 'package:test_app/pages/detail_page.dart';
+import 'package:test_app/widgets/disposing_network_image.dart';
 
 class ItemComic extends StatefulWidget {
   final ComicModel comicModel;
@@ -32,10 +31,10 @@ class _ItemComicState extends State<ItemComic> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Image.network(
-              comicModel.image ?? "",
-              height: 300,
-              fit: BoxFit.fitHeight,
+            child: DisposingNetworkImage(
+              image: NetworkImage(
+                comicModel.image ?? "",
+              ),
             ),
           ),
           Positioned(

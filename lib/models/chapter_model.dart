@@ -1,4 +1,3 @@
-import 'dart:ffi';
 
 class ChapterModel {
   String? id;
@@ -9,9 +8,7 @@ class ChapterModel {
   ChapterModel({this.id, this.name, this.url, this.time});
 
   ChapterModel.fromJson(Map<String, dynamic> json) {
-    if (json["id"] is String) {
-      id = json["id"];
-    }
+    id = json["id"];
     if (json["name"] is String) {
       name = json["name"];
     }
@@ -24,9 +21,7 @@ class ChapterModel {
   }
 
   ChapterModel.fromJsonApi(Map<String, dynamic> json) {
-    if (json["chapterId"] is Int) {
-      id = json["chapterId"].toString();
-    }
+    id = json["id"].toString();
     if (json["name"] is String) {
       name = json["name"];
     }
@@ -40,11 +35,11 @@ class ChapterModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> _data = <String, dynamic>{};
-    _data["id"] = id;
-    _data["name"] = name;
-    _data["url"] = url;
-    _data["time"] = time;
-    return _data;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data["id"] = id;
+    data["name"] = name;
+    data["url"] = url;
+    data["time"] = time;
+    return data;
   }
 }

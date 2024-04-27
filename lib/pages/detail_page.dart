@@ -1,14 +1,16 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:test_app/config/colors.dart';
-import 'package:test_app/config/string.dart';
+import 'package:test_app/models/chapter_model.dart';
 import 'package:test_app/models/comic_model.dart';
+import 'package:test_app/pages/read_page.dart';
 import 'package:test_app/responses/chapter_response.dart';
+import 'package:test_app/sqflite/sqflite.dart';
 import 'package:test_app/widgets/sidebar_chapter/sidebar_chapter.dart';
-
-
+import 'package:http/http.dart' as http;
 
 class DetailPage extends StatefulWidget {
   final ComicModel comicModel;
@@ -19,12 +21,59 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
+  late Future<ChapterResponse> chapterData;
+  final DbHelper dbHelper = DbHelper();
+  bool loading = false;
+  late ChapterModel chapterModelFirst;
+  late ChapterModel chapterModelReding;
+  late bool readed = false;
+  late Map<String, dynamic> history;
+
+  Future<ChapterResponse> fetchAlbum() async {
+    ComicModel comicModel = widget.comicModel;
+    setState(() {
+      loading = true;
+    });
+    final response = await http.get(Uri.parse(comicModel.apiChapter ?? ""));
+    history = await dbHelper.getHistory(widget.comicModel.id ?? "0");
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+      ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
+      _loadChapterReading(chapterResponse.chapters ?? []);
+      chapterModelFirst = chapterResponse.chapters!.last;
+      if (history.isNotEmpty) {
+        setState(() {
+          readed = true;
+        });
+      }
+      setState(() {
+        loading = false;
+      });
+      return chapterResponse;
+    } else {
+      setState(() {
+        loading = false;
+      });
+      throw Exception('Failed to load album');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    chapterData = fetchAlbum();
+  }
+
   @override
   Widget build(BuildContext context) {
-    ComicModel comicModel = widget.comicModel;
     return Scaffold(
       backgroundColor: clPrimary,
-      endDrawer:  SidebarChapter(apiChapter: comicModel.apiChapter ?? "",),
+      endDrawer: SidebarChapter(
+        chapterData: chapterData,
+        comicModel: widget.comicModel,
+        chapterCurrentId: history['chapter_id'],
+      ),
       floatingActionButton: FractionallySizedBox(
         widthFactor: 0.8,
         child: Row(
@@ -52,7 +101,16 @@ class _DetailPageState extends State<DetailPage> {
                     icon: const Icon(Icons.favorite))),
             GestureDetector(
               onTap: () {
-                print("tap");
+                if (!loading) {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                        builder: (context) => ReadPage(
+                              chapterModel: chapterModelFirst,
+                              comicModel: widget.comicModel,
+                            )),
+                  );
+                }
               },
               child: Container(
                   height: 50,
@@ -68,13 +126,20 @@ class _DetailPageState extends State<DetailPage> {
                           blurRadius: 20,
                         )
                       ]),
-                  child: const Text(
-                    "Đọc ngay",
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold),
-                  )),
+                  child: loading
+                      ? Center(
+                          child: LoadingAnimationWidget.fourRotatingDots(
+                            color: clPrimary,
+                            size: 30,
+                          ),
+                        )
+                      : Text(
+                          readed ? "Đọc tiếp" : "Đọc ngay",
+                          style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold),
+                        )),
             ),
           ],
         ),
@@ -257,5 +322,13 @@ class _DetailPageState extends State<DetailPage> {
         ],
       ),
     );
+  }
+
+  _loadChapterReading(List<ChapterModel> chapters) {
+    ChapterModel chapterModel =
+        chapters.firstWhere((chapter) => chapter.id == history['id']);
+    setState(() {
+      chapterModelReding = chapterModel;
+    });
   }
 }

@@ -1,45 +1,25 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:test_app/config/string.dart';
+import 'package:test_app/models/comic_model.dart';
 import 'package:test_app/responses/chapter_response.dart';
 import 'package:test_app/widgets/sidebar_chapter/item_chapter.dart';
-import 'package:http/http.dart' as http;
-
 
 class SidebarChapter extends StatefulWidget {
-  final String apiChapter;
-  const SidebarChapter({super.key, required this.apiChapter});
+  final Future<ChapterResponse> chapterData;
+  final ComicModel comicModel;
+  final String? chapterCurrentId;
+  final Function? setChapterCurrent;
+  const SidebarChapter(
+      {super.key,
+      required this.chapterData,
+      required this.comicModel,
+      this.chapterCurrentId,
+      this.setChapterCurrent});
 
   @override
   State<SidebarChapter> createState() => _SidebarChapterState();
 }
 
 class _SidebarChapterState extends State<SidebarChapter> {
-  late Future<ChapterResponse> chapterData;
-
-  Future<ChapterResponse> fetchAlbum() async {
-    final response = await http
-        .get(Uri.parse(widget.apiChapter));
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return ChapterResponse.fromJson(data);
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load album');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    chapterData = fetchAlbum();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -47,19 +27,22 @@ class _SidebarChapterState extends State<SidebarChapter> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: FutureBuilder<ChapterResponse>(
-          future: chapterData,
+          future: widget.chapterData,
           builder: (context, snapshot) {
-            if(snapshot.hasData){
+            if (snapshot.hasData) {
               return ListView.builder(
                 itemCount: snapshot.data!.chapters!.length,
                 itemBuilder: (context, index) {
                   return ItemChapter(
                     chapterModel: snapshot.data!.chapters![index],
-                    isSelected: false,
+                    comicModel: widget.comicModel,
+                    setChapterCurrent: widget.setChapterCurrent,
+                    isSelected: widget.chapterCurrentId ==
+                        snapshot.data!.chapters![index].id,
                   );
                 },
               );
-            }else if (snapshot.hasError) {
+            } else if (snapshot.hasError) {
               return Center(child: Text('${snapshot.error}'));
             }
 

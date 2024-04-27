@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_app/config/bottomNaviItems.dart';
+import 'package:test_app/config/bottom_navi_items.dart';
 import 'package:test_app/config/colors.dart';
 
 class BottomNavigation extends StatefulWidget {

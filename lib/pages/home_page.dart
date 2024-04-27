@@ -23,9 +23,11 @@ class _HomePageState extends State<HomePage> {
   late int page = 1;
   late bool isLoading = false;
   Future<ComicResponse> fetchAlbum() async {
-    isLoading = true;
+    setState(() {
+      isLoading = true;
+    });
     final response = await http
-        .get(Uri.parse('${dotenv.env['PUBLIC_URL_API']}/comics?page=${page}'));
+        .get(Uri.parse('${dotenv.env['PUBLIC_URL_API']}/comics?page=$page'));
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -41,11 +43,14 @@ class _HomePageState extends State<HomePage> {
       } else {
         comicResponse = ComicResponse.fromJson(data['data']);
       }
-      isLoading = false;
-
+      setState(() {
+        isLoading = false;
+      });
       return comicResponse;
     } else {
-      isLoading = false;
+      setState(() {
+        isLoading = false;
+      });
       throw Exception('Failed to load album');
     }
   }
@@ -162,10 +167,6 @@ class _HomePageState extends State<HomePage> {
                   color: clPrimary,
                   size: 50,
                 ),
-              )
-            else
-              const SizedBox(
-                height: 100,
               )
           ],
         ),
