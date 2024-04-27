@@ -6,8 +6,7 @@ import 'package:test_app/widgets/bottom_navigation.dart';
 
 Future<void> main() async {
   await dotenv.load();
-  final dbHelper = DbHelper();
-  await dbHelper.initDB();
+  await DbHelper().initDB();
   runApp(const MyApp());
 }
 

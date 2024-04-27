@@ -1,4 +1,3 @@
-
 class ChapterModel {
   String? id;
   String? name;
@@ -27,6 +26,9 @@ class ChapterModel {
     }
     if (json["url"] is String) {
       url = json["url"];
+    }
+    if (json["time"] is String) {
+      time = json["time"];
     }
   }
 

@@ -2,13 +2,21 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DbHelper {
+  static final DbHelper _singleton = DbHelper._internal();
   late Database database;
+
+  factory DbHelper() {
+    return _singleton;
+  }
+
+  DbHelper._internal();
 
   Future<void> initDB() async {
     final databasesPath = await getDatabasesPath();
     String path = join(databasesPath, 'comics-app.db');
-    database =
-        await openDatabase(path, version: 1, onCreate: (db, version) async {
+
+    database = await openDatabase(path, version: 1,
+        onCreate: (Database db, int version) async {
       await db.execute(
           'CREATE TABLE hr_histories (comic_id TEXT, chapter_id TEXT)');
     });
@@ -41,7 +49,7 @@ class DbHelper {
   Future<void> upsertHistory(String comicId, String chapterId) async {
     Map<String, dynamic> history = await getHistory(comicId);
 
-    if (history['comic_id' != '0']) {
+    if (history['comic_id'] != '0') {
       await updateHistory(comicId, chapterId);
     } else {
       await insertHistory(comicId, chapterId);

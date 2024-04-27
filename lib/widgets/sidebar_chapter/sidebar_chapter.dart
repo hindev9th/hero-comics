@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:test_app/config/colors.dart';
 import 'package:test_app/models/comic_model.dart';
 import 'package:test_app/responses/chapter_response.dart';
 import 'package:test_app/widgets/sidebar_chapter/item_chapter.dart';
@@ -46,7 +48,12 @@ class _SidebarChapterState extends State<SidebarChapter> {
               return Center(child: Text('${snapshot.error}'));
             }
 
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: LoadingAnimationWidget.fourRotatingDots(
+                color: clPrimary,
+                size: 30,
+              ),
+            );
           },
         ),
       ),

@@ -11,6 +11,7 @@ import 'package:test_app/responses/chapter_response.dart';
 import 'package:test_app/sqflite/sqflite.dart';
 import 'package:test_app/widgets/sidebar_chapter/sidebar_chapter.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DetailPage extends StatefulWidget {
   final ComicModel comicModel;
@@ -23,6 +24,7 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   late Future<ChapterResponse> chapterData;
   final DbHelper dbHelper = DbHelper();
+
   bool loading = false;
   late ChapterModel chapterModelFirst;
   late ChapterModel chapterModelReding;
@@ -34,13 +36,15 @@ class _DetailPageState extends State<DetailPage> {
     setState(() {
       loading = true;
     });
-    final response = await http.get(Uri.parse(comicModel.apiChapter ?? ""));
+    final response = await http.get(Uri.parse(
+        '${dotenv.env['PUBLIC_URL_API']}/chapters?key=${comicModel.url}'));
     history = await dbHelper.getHistory(widget.comicModel.id ?? "0");
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
       ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
-      _loadChapterReading(chapterResponse.chapters ?? []);
+      _loadChapterReading(
+          chapterResponse.chapters ?? [], history["chapter_id"]);
       chapterModelFirst = chapterResponse.chapters!.last;
       if (history.isNotEmpty) {
         setState(() {
@@ -72,7 +76,7 @@ class _DetailPageState extends State<DetailPage> {
       endDrawer: SidebarChapter(
         chapterData: chapterData,
         comicModel: widget.comicModel,
-        chapterCurrentId: history['chapter_id'],
+        chapterCurrentId: readed ? history['chapter_id'] : "0",
       ),
       floatingActionButton: FractionallySizedBox(
         widthFactor: 0.8,
@@ -106,7 +110,9 @@ class _DetailPageState extends State<DetailPage> {
                     context,
                     CupertinoPageRoute(
                         builder: (context) => ReadPage(
-                              chapterModel: chapterModelFirst,
+                              chapterModel: readed
+                                  ? chapterModelReding
+                                  : chapterModelFirst,
                               comicModel: widget.comicModel,
                             )),
                   );
@@ -324,11 +330,17 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  _loadChapterReading(List<ChapterModel> chapters) {
-    ChapterModel chapterModel =
-        chapters.firstWhere((chapter) => chapter.id == history['id']);
-    setState(() {
-      chapterModelReding = chapterModel;
-    });
+  _loadChapterReading(List<ChapterModel> chapters, String historyId) {
+    for (var chapter in chapters) {
+      if (historyId == "0") {
+        break;
+      }
+      if (chapter.id == historyId) {
+        setState(() {
+          chapterModelReding = chapter;
+        });
+        break;
+      }
+    }
   }
 }

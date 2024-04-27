@@ -1,14 +1,19 @@
 import 'package:test_app/models/chapter_model.dart';
 
-class ChapterResponse{
-  int? success;
+class ChapterResponse {
+  int? status;
+  String? message;
   List<ChapterModel>? chapters;
 
-  ChapterResponse({this.success,this.chapters});
+  ChapterResponse({this.status, this.chapters});
 
-  factory ChapterResponse.fromJson(Map<String, dynamic> json){
-    return  ChapterResponse(
-            chapters: json["chapters"] != null ? (json["chapters"] as List).map((e) => ChapterModel.fromJsonApi(e)).toList() : [],
-          );
+  factory ChapterResponse.fromJson(Map<String, dynamic> json) {
+    return ChapterResponse(
+      chapters: json['data']["list"] != null
+          ? (json['data']["list"] as List)
+              .map((e) => ChapterModel.fromJsonApi(e))
+              .toList()
+          : [],
+    );
   }
 }

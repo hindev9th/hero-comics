@@ -13,6 +13,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ReadPage extends StatefulWidget {
   final ChapterModel chapterModel;
@@ -49,9 +50,10 @@ class _ReadPageState extends State<ReadPage> {
     setState(() {
       loadingChapter = true;
     });
-    final response = await http.get(Uri.parse(comicModel.apiChapter ?? ""));
-    await dbHelper.insertHistory(
-        widget.comicModel.id ?? "0", widget.comicModel.chapter?.id ?? "0");
+    final response = await http.get(Uri.parse(
+        '${dotenv.env['PUBLIC_URL_API']}/chapters?key=${comicModel.url}'));
+    await dbHelper.upsertHistory(
+        widget.comicModel.id ?? "0", widget.chapterModel.id ?? "0");
     if (response.statusCode == 200) {
       Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
       ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
@@ -352,6 +354,8 @@ class _ReadPageState extends State<ReadPage> {
     setState(() {
       loading = true;
       chapterCurrent = chapterModel;
+      dbHelper.upsertHistory(
+          widget.comicModel.id ?? "0", chapterModel.id ?? "0");
     });
     _controller.loadRequest(Uri.parse(widget.chapterModel.url ?? ""));
 
