@@ -24,51 +24,85 @@ class ItemChapter extends StatefulWidget {
 class _ItemChapterState extends State<ItemChapter> {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (widget.setChapterCurrent != null) {
-          widget.setChapterCurrent!(widget.chapterModel);
-        } else {
-          Navigator.push(
-            context,
-            CupertinoPageRoute(
-                builder: (context) => ReadPage(
-                      chapterModel: widget.chapterModel,
-                      comicModel: widget.comicModel,
-                    )),
-          );
-        }
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(10),
-        margin: const EdgeInsets.only(
-          bottom: 10,
+    return Card(
+      color: widget.isSelected ? clPrimary : Colors.white,
+      shadowColor: clPrimary,
+      elevation: 3,
+      surfaceTintColor: clPrimary,
+      child: ListTile(
+        onTap: () {
+          if (widget.setChapterCurrent != null) {
+            widget.setChapterCurrent!(widget.chapterModel);
+          } else {
+            Navigator.push(
+              context,
+              CupertinoPageRoute(
+                  builder: (context) => ReadPage(
+                        chapterModel: widget.chapterModel,
+                        comicModel: widget.comicModel,
+                      )),
+            );
+          }
+        },
+        title: Text(
+          widget.chapterModel.name ?? "",
+          style:
+              TextStyle(color: widget.isSelected ? Colors.white : Colors.black),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
-        decoration: BoxDecoration(
-            color: widget.isSelected ? clPrimary : Colors.white,
-            border: Border.all(width: 1, color: clPrimary),
-            borderRadius: BorderRadius.circular(10)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(
-                widget.chapterModel.name ?? "",
-                style: TextStyle(
-                    color: widget.isSelected ? Colors.white : Colors.black),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            Text(
-              widget.chapterModel.time ?? "",
-              style: TextStyle(
-                  color: widget.isSelected ? Colors.white : Colors.black),
-            ),
-          ],
+        subtitle: Text(
+          widget.chapterModel.time ?? "",
+          style:
+              TextStyle(color: widget.isSelected ? Colors.white : Colors.black),
         ),
       ),
     );
+    // GestureDetector(
+    //   onTap: () {
+    //     if (widget.setChapterCurrent != null) {
+    //       widget.setChapterCurrent!(widget.chapterModel);
+    //     } else {
+    //       Navigator.push(
+    //         context,
+    //         CupertinoPageRoute(
+    //             builder: (context) => ReadPage(
+    //                   chapterModel: widget.chapterModel,
+    //                   comicModel: widget.comicModel,
+    //                 )),
+    //       );
+    //     }
+    //   },
+    //   child: Container(
+    //     width: double.infinity,
+    //     padding: const EdgeInsets.all(10),
+    //     margin: const EdgeInsets.only(
+    //       bottom: 10,
+    //     ),
+    //     decoration: BoxDecoration(
+    //         color: widget.isSelected ? clPrimary : Colors.white,
+    //         border: Border.all(width: 1, color: clPrimary),
+    //         borderRadius: BorderRadius.circular(10)),
+    //     child: Row(
+    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //       children: [
+    //         Flexible(
+    //           child: Text(
+    //             widget.chapterModel.name ?? "",
+    //             style: TextStyle(
+    //                 color: widget.isSelected ? Colors.white : Colors.black),
+    //             overflow: TextOverflow.ellipsis,
+    //             maxLines: 1,
+    //           ),
+    //         ),
+    //         Text(
+    //           widget.chapterModel.time ?? "",
+    //           style: TextStyle(
+    //               color: widget.isSelected ? Colors.white : Colors.black),
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 }

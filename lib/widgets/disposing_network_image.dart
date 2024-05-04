@@ -1,10 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:test_app/config/colors.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class DisposingNetworkImage extends StatefulWidget {
-  final NetworkImage image;
+  final String image;
   const DisposingNetworkImage({super.key, required this.image});
 
   @override
@@ -15,69 +15,32 @@ class _DisposingNetworkImageState extends State<DisposingNetworkImage> {
   bool isShow = false;
 
   @override
-  void dispose() {
-    imageCache.evict(widget.image);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return VisibilityDetector(
-        key: Key(widget.image.url),
-        onVisibilityChanged: (info) {
-          if (info.visibleFraction > 0.1 && !isShow) {
-            setState(() {
-              isShow = true;
-            });
-          }
-          // When the image becomes invisible
-          else if (info.visibleFraction <= 0.1 && isShow) {
-            setState(() {
-              isShow = false;
-            });
-          }
-        },
-        child: AnimatedCrossFade(
-          duration: const Duration(milliseconds: 300),
-          firstChild: Container(
-            height: 300,
-            width: double.infinity,
-            decoration: const BoxDecoration(color: clPrimary),
-            child: Center(
-              child: LoadingAnimationWidget.fourRotatingDots(
-                color: Colors.white,
-                size: 30,
+    return CachedNetworkImage(
+        imageUrl: widget.image,
+        height: 300,
+        imageBuilder: (context, imageProvider) => Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          secondChild: Image(
-            image: widget.image,
+        placeholder: (context, url) => SizedBox(
             height: 300,
             width: double.infinity,
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              return AnimatedCrossFade(
-                duration: const Duration(milliseconds: 300),
-                firstChild: Container(
-                  height: 300,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(color: clPrimary),
-                  child: Center(
-                    child: LoadingAnimationWidget.fourRotatingDots(
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                ),
-                secondChild: Center(child: child),
-                crossFadeState: loadingProgress != null
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-              );
-            },
-          ),
-          crossFadeState:
-              !isShow ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-        ));
+            child: Center(
+              child: LoadingAnimationWidget.fourRotatingDots(
+                  color: Colors.white, size: 30),
+            )),
+        errorWidget: (context, url, error) => const SizedBox(
+            height: 300,
+            width: double.infinity,
+            child: Icon(
+              Icons.error,
+              color: Colors.white,
+              size: 50,
+            )));
   }
 }

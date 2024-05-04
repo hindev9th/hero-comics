@@ -34,7 +34,6 @@ class _ReadPageState extends State<ReadPage> {
   late final WebViewController _controller;
   bool isScrollDown = false;
   late List<ChapterModel> chapterList;
-  ScrollController scrollController = ScrollController();
   bool isChapterNext = false;
   bool isChapterBefore = false;
 
@@ -99,6 +98,11 @@ class _ReadPageState extends State<ReadPage> {
             if (progress > 20) {
               setState(() {
                 _hideCss().then((value) => loading = false);
+                _controller.runJavaScript('''window.onscroll = function(e) {
+                  // print "false" if direction is down and "true" if up
+                  Toaster.postMessage(this.oldScroll > this.scrollY);
+                  this.oldScroll = this.scrollY;
+                }''');
               });
             }
           },
@@ -127,7 +131,9 @@ class _ReadPageState extends State<ReadPage> {
       ..addJavaScriptChannel(
         'Toaster',
         onMessageReceived: (JavaScriptMessage message) {
-          // print(message.message);
+          setState(() {
+            isScrollDown = message.message.toLowerCase() == 'false';
+          });
         },
       )
       ..loadRequest(Uri.parse(widget.chapterModel.url ?? ""));
@@ -139,22 +145,6 @@ class _ReadPageState extends State<ReadPage> {
     }
 
     _controller = controller;
-
-    scrollController = ScrollController();
-    scrollController.addListener(() {
-      if (scrollController.position.userScrollDirection ==
-          ScrollDirection.reverse) {
-        setState(() {
-          isScrollDown = true;
-        });
-      }
-      if (scrollController.position.userScrollDirection ==
-          ScrollDirection.forward) {
-        setState(() {
-          isScrollDown = false;
-        });
-      }
-    });
   }
 
   @override
@@ -357,7 +347,7 @@ class _ReadPageState extends State<ReadPage> {
       dbHelper.upsertHistory(
           widget.comicModel.id ?? "0", chapterModel.id ?? "0");
     });
-    _controller.loadRequest(Uri.parse(widget.chapterModel.url ?? ""));
+    _controller.loadRequest(Uri.parse(chapterModel.url ?? ""));
 
     _loadChapterNext();
   }

@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:test_app/pages/login_page.dart';
 
 class BookmarkPage extends StatefulWidget {
   const BookmarkPage({super.key});
@@ -10,6 +12,16 @@ class BookmarkPage extends StatefulWidget {
 class _BookmarkPageState extends State<BookmarkPage> {
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text("bookmark"));
+    return Center(
+        child: MaterialButton(
+      onPressed: () {
+        Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => LoginPage(),
+            ));
+      },
+      child: Text("Login"),
+    ));
   }
 }

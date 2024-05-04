@@ -46,7 +46,7 @@ class _DetailPageState extends State<DetailPage> {
       _loadChapterReading(
           chapterResponse.chapters ?? [], history["chapter_id"]);
       chapterModelFirst = chapterResponse.chapters!.last;
-      if (history.isNotEmpty) {
+      if (history['comic_id'] != '0') {
         setState(() {
           readed = true;
         });
