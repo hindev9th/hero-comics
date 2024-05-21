@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:test_app/pages/login_page.dart';
+import 'package:test_app/widgets/bookmark/favorite_tab.dart';
+import 'package:test_app/widgets/bookmark/history_tab.dart';
 
 class BookmarkPage extends StatefulWidget {
   const BookmarkPage({super.key});
@@ -9,19 +9,34 @@ class BookmarkPage extends StatefulWidget {
   State<BookmarkPage> createState() => _BookmarkPageState();
 }
 
-class _BookmarkPageState extends State<BookmarkPage> {
+class _BookmarkPageState extends State<BookmarkPage>
+    with TickerProviderStateMixin {
+  late final TabController _tabController =
+      TabController(length: 2, vsync: this);
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child: MaterialButton(
-      onPressed: () {
-        Navigator.push(
-            context,
-            CupertinoPageRoute(
-              builder: (context) => LoginPage(),
-            ));
-      },
-      child: Text("Login"),
-    ));
+    return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 0,
+        bottom: TabBar(controller: _tabController, tabs: const [
+          Tab(
+            text: "Lịch sử",
+            icon: Icon(Icons.history),
+          ),
+          Tab(
+            text: "Yêu thích",
+            icon: Icon(Icons.favorite),
+          ),
+        ]),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const <Widget>[
+          HistoryTab(),
+          FavoriteTab(),
+        ],
+      ),
+    );
   }
 }

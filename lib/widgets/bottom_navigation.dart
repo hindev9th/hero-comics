@@ -30,11 +30,9 @@ class _BottomNavigationState extends State<BottomNavigation> {
         fit: StackFit.expand,
         alignment: Alignment.center,
         children: [
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8),
-              child: bottomNavItems[selectedIndex].page,
-            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8, right: 8),
+            child: bottomNavItems[selectedIndex].page,
           ),
           Positioned(
             bottom: 0,

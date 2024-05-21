@@ -1,8 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:test_app/common/http_api.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:test_app/models/chapter_model.dart';
 import 'package:test_app/models/comic_model.dart';
@@ -12,7 +10,6 @@ import 'package:test_app/widgets/sidebar_chapter/sidebar_chapter.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ReadPage extends StatefulWidget {
@@ -49,26 +46,23 @@ class _ReadPageState extends State<ReadPage> {
     setState(() {
       loadingChapter = true;
     });
-    final response = await http.get(Uri.parse(
-        '${dotenv.env['PUBLIC_URL_API']}/chapters?key=${comicModel.url}'));
-    await dbHelper.upsertHistory(
-        widget.comicModel.id ?? "0", widget.chapterModel.id ?? "0");
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
-      setState(() {
-        chapterList = chapterResponse.chapters!;
-        loadingChapter = false;
-      });
-      _loadChapterNext();
+    final data = await HttpApi()
+        .get('${dotenv.env['PUBLIC_URL_API']}/chapters?key=${comicModel.url}');
 
-      return chapterResponse;
-    } else {
-      setState(() {
-        loadingChapter = false;
-      });
-      throw Exception('Failed to load album');
-    }
+    await dbHelper.upsertHistory(
+        widget.comicModel.id ?? "0",
+        widget.chapterModel.id ?? "0",
+        widget.chapterModel.name ?? "",
+        widget.chapterModel.url ?? "");
+
+    ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
+    setState(() {
+      chapterList = chapterResponse.chapters!;
+      loadingChapter = false;
+    });
+    _loadChapterNext();
+
+    return chapterResponse;
   }
 
   @override
@@ -345,7 +339,10 @@ class _ReadPageState extends State<ReadPage> {
       loading = true;
       chapterCurrent = chapterModel;
       dbHelper.upsertHistory(
-          widget.comicModel.id ?? "0", chapterModel.id ?? "0");
+          widget.comicModel.id ?? "0",
+          chapterModel.id ?? "0",
+          chapterModel.name ?? "",
+          chapterModel.url ?? "");
     });
     _controller.loadRequest(Uri.parse(chapterModel.url ?? ""));
 

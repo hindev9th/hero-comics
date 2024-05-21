@@ -18,18 +18,34 @@ class DbHelper {
     database = await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       await db.execute(
-          'CREATE TABLE hr_histories (comic_id TEXT, chapter_id TEXT)');
+          'CREATE TABLE hr_histories (comic_id TEXT, chapter_id TEXT, chapter_name TEXT, chapter_url TEXT)');
     });
   }
 
-  Future<void> insertHistory(String comicId, String chapterId) async {
-    await database
-        .insert('hr_histories', {'comic_id': comicId, 'chapter_id': chapterId});
+  Future<void> insertHistory(String comicId, String chapterId,
+      String chapterName, String chapterUrl) async {
+    chapterUrl =
+        chapterUrl.replaceRange(0, chapterUrl.indexOf('/', 10) + 1, '');
+    await database.insert('hr_histories', {
+      'comic_id': comicId,
+      'chapter_id': chapterId,
+      'chapter_name': chapterName,
+      'chapter_url': chapterUrl
+    });
   }
 
-  Future<void> updateHistory(String comicId, String chapterId) async {
-    await database.update('hr_histories', {'chapter_id': chapterId},
-        where: 'comic_id = ?', whereArgs: [comicId]);
+  Future<void> updateHistory(String comicId, String chapterId,
+      String chapterName, String chapterUrl) async {
+    await database.update(
+        'hr_histories',
+        {
+          'comic_id': comicId,
+          'chapter_id': chapterId,
+          'chapter_name': chapterName,
+          'chapter_url': chapterUrl
+        },
+        where: 'comic_id = ?',
+        whereArgs: [comicId]);
   }
 
   Future<Map<String, dynamic>> getHistory(String comicId) async {
@@ -46,13 +62,21 @@ class DbHelper {
     }
   }
 
-  Future<void> upsertHistory(String comicId, String chapterId) async {
+  Future<List<Map<String, dynamic>>> getHistories(String comicId) async {
+    List<Map<String, dynamic>> history = await database.query('hr_histories',
+        limit: 1, where: 'comic_id = ?', whereArgs: [comicId]);
+
+    return history;
+  }
+
+  Future<void> upsertHistory(String comicId, String chapterId,
+      String chapterName, String chapterUrl) async {
     Map<String, dynamic> history = await getHistory(comicId);
 
     if (history['comic_id'] != '0') {
-      await updateHistory(comicId, chapterId);
+      await updateHistory(comicId, chapterId, chapterName, chapterUrl);
     } else {
-      await insertHistory(comicId, chapterId);
+      await insertHistory(comicId, chapterId, chapterName, chapterUrl);
     }
   }
 }

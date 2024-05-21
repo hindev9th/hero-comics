@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:test_app/common/http_api.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:test_app/models/comic_model.dart';
 import 'package:test_app/responses/comic_response.dart';
 import 'package:test_app/widgets/item_comic.dart';
-import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,33 +24,25 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isLoading = true;
     });
-    final response = await http
-        .get(Uri.parse('${dotenv.env['PUBLIC_URL_API']}/comics?page=$page'));
+    final data = await HttpApi()
+        .get('${dotenv.env['PUBLIC_URL_API']}/comics?page=$page');
 
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      ComicResponse comicResponseTemp = ComicResponse.fromJson(data['data']);
-      if (page > 1) {
-        comicResponse.list!
-            .addAll(comicResponseTemp.list as Iterable<ComicModel>);
-        comicResponse.currentPage = comicResponseTemp.currentPage;
-        comicResponse.currentSize = comicResponseTemp.currentSize;
-        comicResponse.sizePage = comicResponseTemp.sizePage;
-        comicResponse.totalItem = comicResponseTemp.totalItem;
-        comicResponse.totalPage = comicResponseTemp.totalPage;
-      } else {
-        comicResponse = ComicResponse.fromJson(data['data']);
-      }
-      setState(() {
-        isLoading = false;
-      });
-      return comicResponse;
+    ComicResponse comicResponseTemp = ComicResponse.fromJson(data['data']);
+    if (page > 1) {
+      comicResponse.list!
+          .addAll(comicResponseTemp.list as Iterable<ComicModel>);
+      comicResponse.currentPage = comicResponseTemp.currentPage;
+      comicResponse.currentSize = comicResponseTemp.currentSize;
+      comicResponse.sizePage = comicResponseTemp.sizePage;
+      comicResponse.totalItem = comicResponseTemp.totalItem;
+      comicResponse.totalPage = comicResponseTemp.totalPage;
     } else {
-      setState(() {
-        isLoading = false;
-      });
-      throw Exception('Failed to load album');
+      comicResponse = ComicResponse.fromJson(data['data']);
     }
+    setState(() {
+      isLoading = false;
+    });
+    return comicResponse;
   }
 
   Future<void> _pullRefresh() async {
@@ -98,6 +88,9 @@ class _HomePageState extends State<HomePage> {
         controller: scrollController,
         child: Column(
           children: [
+            const SizedBox(
+              height: 30,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

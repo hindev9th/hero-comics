@@ -1,10 +1,16 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:http/http.dart' as http;
+import 'package:test_app/enums/auth.dart';
+import 'package:test_app/models/user_model.dart';
+import 'package:test_app/widgets/bottom_navigation.dart';
 import 'package:toastification/toastification.dart';
 
 class LoginPage extends StatefulWidget {
@@ -19,55 +25,117 @@ class _LoginPageState extends State<LoginPage> {
   late String username;
   late String password;
   late bool isLoading = false;
+  bool isLogin = false;
+
+  Future<void> checkLogin() async {
+    String? user = await storage.read(key: AuthEnum.user.name);
+    setState(() {
+      isLogin = user != null;
+    });
+  }
 
   Future<void> handleLogin() async {
     setState(() {
       isLoading = true;
     });
-    final response =
-        await http.post(Uri.parse('${dotenv.get("PUBLIC_URL_API")}/login'));
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      if (data['status'] == 200) {
-      } else {}
-    }
-  }
+    try {
+      final response = await http.post(
+          Uri.parse('${dotenv.get("PUBLIC_URL_API")}/login'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(
+              <String, String>{'username': username, 'password': password}));
+      if (response.statusCode == 200) {
+        Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        if (data['status'] == 200) {
+          UserModal userModal = UserModal.fromJson(data['data']);
+          await storage.write(
+              key: AuthEnum.user.name, value: jsonEncode(userModal.toJson()));
 
-  void showToast(String title, String message) {
-    toastification.show(
-      context: context,
-      icon: const Icon(Icons.error),
-      type: ToastificationType.error,
-      style: ToastificationStyle.flat,
-      title: Text(title),
-      description: Text(message),
-      alignment: Alignment.topRight,
-      autoCloseDuration: const Duration(seconds: 4),
-      animationBuilder: (
-        context,
-        animation,
-        alignment,
-        child,
-      ) {
-        return ScaleTransition(
-          scale: animation,
-          child: child,
-        );
-      },
-      borderRadius: BorderRadius.circular(100.0),
-      showProgressBar: true,
-      dragToClose: true,
-    );
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacement(
+                context,
+                CupertinoPageRoute(
+                  builder: (context) => const BottomNavigation(),
+                ));
+          });
+        } else {
+          toastification.show(
+            context: context,
+            icon: const Icon(Icons.error),
+            type: ToastificationType.error,
+            style: ToastificationStyle.flat,
+            title: const Text("Lỗi"),
+            description: Text(data['message']),
+            alignment: Alignment.topRight,
+            autoCloseDuration: const Duration(seconds: 4),
+            animationBuilder: (
+              context,
+              animation,
+              alignment,
+              child,
+            ) {
+              return ScaleTransition(
+                scale: animation,
+                child: child,
+              );
+            },
+            borderRadius: BorderRadius.circular(100.0),
+            showProgressBar: true,
+            dragToClose: true,
+          );
+        }
+      }
+    } catch (e) {
+      toastification.show(
+        context: context,
+        icon: const Icon(Icons.error),
+        type: ToastificationType.error,
+        style: ToastificationStyle.flat,
+        title: const Text("Lỗi"),
+        description: const Text("Không thể kết nối đến server."),
+        alignment: Alignment.topRight,
+        autoCloseDuration: const Duration(seconds: 4),
+        animationBuilder: (
+          context,
+          animation,
+          alignment,
+          child,
+        ) {
+          return ScaleTransition(
+            scale: animation,
+            child: child,
+          );
+        },
+        borderRadius: BorderRadius.circular(100.0),
+        showProgressBar: true,
+        dragToClose: true,
+      );
+    }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
-  void setState(VoidCallback fn) {
-    // TODO: implement setState
-    super.setState(fn);
+  void initState() {
+    super.initState();
+    checkLogin();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLogin) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => const BottomNavigation(),
+            ));
+      });
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -101,7 +169,9 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(50)),
                         child: IconButton(
                             onPressed: () {
-                              Navigator.pop(context);
+                              if (!isLoading) {
+                                Navigator.pop(context);
+                              }
                             },
                             icon: const Icon(
                               Icons.arrow_back,
@@ -203,15 +273,22 @@ class _LoginPageState extends State<LoginPage> {
                               clPrimary.withOpacity(0.7) // foreground
                           ),
                       onPressed: () {
-                        handleLogin();
+                        if (!isLoading) {
+                          handleLogin();
+                        }
                       },
-                      child: const Text(
-                        'Đăng nhập',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
-                      ),
+                      child: isLoading
+                          ? Center(
+                              child: LoadingAnimationWidget.fourRotatingDots(
+                                  color: Colors.white, size: 30),
+                            )
+                          : const Text(
+                              'Đăng nhập',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                 ),
