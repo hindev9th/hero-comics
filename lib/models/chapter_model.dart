@@ -1,47 +1,49 @@
-class ChapterModel {
+
+import 'package:dart_json_mapper/dart_json_mapper.dart';
+
+@JsonSerializable()
+class Chapter {
   String? id;
   String? name;
-  String? url;
-  String? time;
+  String? comicName;
+  String? comicOtherName;
+  String? limit;
+  String? comicId;
+  String? type;
+  int? viewCount;
+  String? numberChapter;
+  String? translationTeam;
+  int? updateTime;
+  String? stringUpdateTime;
+  int? rangeBlock;
+  String? randomCode;
+  String? randomPosition;
+  bool? display;
+  bool? ajax;
+  bool? cdn;
+  bool? video;
+  String? urlVideo;
+  String? serversName;
 
-  ChapterModel({this.id, this.name, this.url, this.time});
-
-  ChapterModel.fromJson(Map<String, dynamic> json) {
-    id = json["id"];
-    if (json["name"] is String) {
-      name = json["name"];
-    }
-    if (json["url"] is String) {
-      url = json["url"];
-    }
-    if (json["time"] is String) {
-      time = json["time"];
-    }
-  }
-
-  ChapterModel.fromJsonApi(Map<String, dynamic> json) {
-    id = json["id"].toString();
-    if (json["name"] is String) {
-      name = json["name"];
-    }
-    if (json["url"] is String) {
-      url = json["url"];
-    }
-    if (json["time"] is String) {
-      time = json["time"];
-    }
-  }
-
-  static List<ChapterModel> fromList(List<Map<String, dynamic>> list) {
-    return list.map((map) => ChapterModel.fromJson(map)).toList();
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data["id"] = id;
-    data["name"] = name;
-    data["url"] = url;
-    data["time"] = time;
-    return data;
-  }
+  Chapter({this.id,
+    this.name,
+    this.comicName,
+    this.comicOtherName,
+    this.limit,
+    this.comicId,
+    this.type,
+    this.viewCount,
+    this.numberChapter,
+    this.translationTeam,
+    this.updateTime,
+    this.stringUpdateTime,
+    this.rangeBlock,
+    this.randomCode,
+    this.randomPosition,
+    this.display,
+    this.ajax,
+    this.cdn,
+    this.video,
+    this.urlVideo,
+    this.serversName});
 }

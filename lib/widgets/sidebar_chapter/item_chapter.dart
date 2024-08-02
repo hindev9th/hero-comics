@@ -6,8 +6,8 @@ import 'package:test_app/models/comic_model.dart';
 import 'package:test_app/pages/read_page.dart';
 
 class ItemChapter extends StatefulWidget {
-  final ChapterModel chapterModel;
-  final ComicModel comicModel;
+  final Chapter chapterModel;
+  final Comic comicModel;
   final bool isSelected;
   final Function? setChapterCurrent;
   const ItemChapter(
@@ -38,21 +38,21 @@ class _ItemChapterState extends State<ItemChapter> {
               context,
               CupertinoPageRoute(
                   builder: (context) => ReadPage(
-                        chapterModel: widget.chapterModel,
+                        chapter: widget.chapterModel,
                         comicModel: widget.comicModel,
                       )),
             );
           }
         },
         title: Text(
-          widget.chapterModel.name ?? "",
+          "Chapter ${widget.chapterModel.numberChapter}",
           style:
               TextStyle(color: widget.isSelected ? Colors.white : Colors.black),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
         subtitle: Text(
-          widget.chapterModel.time ?? "",
+          widget.chapterModel.stringUpdateTime ?? "",
           style:
               TextStyle(color: widget.isSelected ? Colors.white : Colors.black),
         ),

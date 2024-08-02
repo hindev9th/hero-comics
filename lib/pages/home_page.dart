@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:test_app/common/http_api.dart';
+import 'package:test_app/common/https/get_list_comics.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:test_app/models/comic_model.dart';
-import 'package:test_app/responses/comic_response.dart';
 import 'package:test_app/widgets/item_comic.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,34 +13,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<ComicResponse> comicData;
+  late Future<List<Comic>> comicData;
   ScrollController scrollController = ScrollController();
-  late ComicResponse comicResponse;
-  late int page = 1;
+  late List<Comic> listComics;
+  late int page = 0;
   late bool isLoading = false;
-  Future<ComicResponse> fetchAlbum() async {
+  Future<List<Comic>> fetchAlbum() async {
     setState(() {
       isLoading = true;
     });
-    final data = await HttpApi()
-        .get('${dotenv.env['PUBLIC_URL_API']}/comics?page=$page');
+    final data = await getListComics(page);
 
-    ComicResponse comicResponseTemp = ComicResponse.fromJson(data['data']);
     if (page > 1) {
-      comicResponse.list!
-          .addAll(comicResponseTemp.list as Iterable<ComicModel>);
-      comicResponse.currentPage = comicResponseTemp.currentPage;
-      comicResponse.currentSize = comicResponseTemp.currentSize;
-      comicResponse.sizePage = comicResponseTemp.sizePage;
-      comicResponse.totalItem = comicResponseTemp.totalItem;
-      comicResponse.totalPage = comicResponseTemp.totalPage;
+      listComics.addAll(data?.result?.data ?? []);
     } else {
-      comicResponse = ComicResponse.fromJson(data['data']);
+      listComics = data?.result?.data  ?? [];
     }
     setState(() {
       isLoading = false;
     });
-    return comicResponse;
+    return listComics;
   }
 
   Future<void> _pullRefresh() async {
@@ -132,7 +122,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            FutureBuilder<ComicResponse>(
+            FutureBuilder<List<Comic>>(
               future: comicData,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
@@ -140,11 +130,11 @@ class _HomePageState extends State<HomePage> {
                     spacing: 8,
                     runSpacing: 8,
                     children:
-                        List.generate(snapshot.data!.list!.length, (index) {
+                        List.generate(snapshot.data!.length, (index) {
                       return SizedBox(
                           width: itemWidth - 12,
                           child: ItemComic(
-                              comicModel: snapshot.data!.list![index]));
+                              comicModel: snapshot.data![index]));
                     }),
                   );
                 } else if (snapshot.hasError) {

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class DisposingNetworkImage extends StatefulWidget {
@@ -18,6 +19,10 @@ class _DisposingNetworkImageState extends State<DisposingNetworkImage> {
     return CachedNetworkImage(
         imageUrl: widget.image,
         height: 300,
+        httpHeaders: {
+          "referer" : dotenv.env['PUBLIC_URL_API']!,
+          "priority" : "u=1, i"
+        },
         imageBuilder: (context, imageProvider) => Container(
               decoration: BoxDecoration(
                 image: DecorationImage(

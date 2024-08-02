@@ -1,20 +1,19 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:test_app/common/https/get_list_chapters.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:test_app/models/chapter_model.dart';
 import 'package:test_app/models/comic_model.dart';
+import 'package:test_app/models/response/response_detail_comic.dart';
 import 'package:test_app/pages/read_page.dart';
-import 'package:test_app/responses/chapter_response.dart';
 import 'package:test_app/sqflite/sqflite.dart';
 import 'package:test_app/widgets/sidebar_chapter/sidebar_chapter.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DetailPage extends StatefulWidget {
-  final ComicModel comicModel;
+  final Comic comicModel;
+
   const DetailPage({super.key, required this.comicModel});
 
   @override
@@ -22,45 +21,33 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
-  late Future<ChapterResponse> chapterData;
+  late Future<ResponseDetail> chapterData;
   final DbHelper dbHelper = DbHelper();
 
   bool loading = false;
-  late ChapterModel chapterModelFirst;
-  late ChapterModel chapterModelReding;
+  late Chapter chapterModelFirst;
+  late Chapter chapterModelReding;
   late bool readed = false;
   late Map<String, dynamic> history;
 
-  Future<ChapterResponse> fetchAlbum() async {
-    ComicModel comicModel = widget.comicModel;
+  Future<ResponseDetail> fetchAlbum() async {
+    Comic comicModel = widget.comicModel;
     setState(() {
       loading = true;
     });
-    final response = await http.get(Uri.parse(
-        '${dotenv.env['PUBLIC_URL_API']}/chapters?key=${comicModel.url}'));
-    history = await dbHelper.getHistory(widget.comicModel.id ?? "0");
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
-      _loadChapterReading(
-          chapterResponse.chapters ?? [], history["chapter_id"]);
-      chapterModelFirst = chapterResponse.chapters!.last;
-      if (history['comic_id'] != '0') {
-        setState(() {
-          readed = true;
-        });
-      }
-      setState(() {
-        loading = false;
-      });
-      return chapterResponse;
-    } else {
-      setState(() {
-        loading = false;
-      });
-      throw Exception('Failed to load album');
-    }
+    final response = await getListChapter(comicModel.id);
+    // _loadChapterReading(
+    //     response?.chapters ?? [], history["chapter_id"]);
+    chapterModelFirst = response!.result!.chapters!.last;
+    // if (history['comic_id'] != '0') {
+    //   setState(() {
+    //     readed = true;
+    //   });
+    // }
+    setState(() {
+      loading = false;
+    });
+    return response;
   }
 
   @override
@@ -110,7 +97,7 @@ class _DetailPageState extends State<DetailPage> {
                     context,
                     CupertinoPageRoute(
                         builder: (context) => ReadPage(
-                              chapterModel: readed
+                              chapter: readed
                                   ? chapterModelReding
                                   : chapterModelFirst,
                               comicModel: widget.comicModel,
@@ -203,8 +190,12 @@ class _DetailPageState extends State<DetailPage> {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                widget.comicModel.image ?? "",
+                widget.comicModel.photo,
                 fit: BoxFit.fitWidth,
+                headers: {
+                  "referer": dotenv.env['PUBLIC_URL_API']!,
+                  "priority": "u=1, i"
+                },
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) {
                     return child;
@@ -252,7 +243,7 @@ class _DetailPageState extends State<DetailPage> {
                   Row(
                     children: [
                       Text(
-                        widget.comicModel.chapter?.name ?? "",
+                        "Chapter ${widget.comicModel.chapterLatest[0]}",
                         style: const TextStyle(color: Colors.white),
                       ),
                       const Text(" | ", style: TextStyle(color: Colors.white)),
@@ -267,7 +258,7 @@ class _DetailPageState extends State<DetailPage> {
                             width: 2,
                           ),
                           Text(
-                            widget.comicModel.view ?? "",
+                            widget.comicModel.viewCount,
                             style: const TextStyle(color: Colors.white),
                           ),
                         ],
@@ -284,7 +275,7 @@ class _DetailPageState extends State<DetailPage> {
                             width: 2,
                           ),
                           Text(
-                            widget.comicModel.follow ?? "",
+                            widget.comicModel.followerCount,
                             style: const TextStyle(color: Colors.white),
                           ),
                         ],
@@ -295,7 +286,7 @@ class _DetailPageState extends State<DetailPage> {
                     height: 25,
                   ),
                   Text(
-                    widget.comicModel.name ?? "",
+                    widget.comicModel.name,
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -305,7 +296,7 @@ class _DetailPageState extends State<DetailPage> {
                     height: 5,
                   ),
                   Text(
-                    widget.comicModel.anotherName ?? "",
+                    widget.comicModel.otherName,
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -315,7 +306,7 @@ class _DetailPageState extends State<DetailPage> {
                     height: 25,
                   ),
                   Text(
-                    widget.comicModel.description ?? "",
+                    widget.comicModel.description,
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -330,7 +321,7 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  _loadChapterReading(List<ChapterModel> chapters, String historyId) {
+  _loadChapterReading(List<Chapter> chapters, String historyId) {
     for (var chapter in chapters) {
       if (historyId == "0") {
         break;

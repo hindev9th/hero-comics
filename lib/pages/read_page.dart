@@ -1,144 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:test_app/common/http_api.dart';
+import 'package:test_app/common/https/get_list_chapters.dart';
+import 'package:test_app/common/https/get_list_images.dart';
 import 'package:test_app/config/colors.dart';
 import 'package:test_app/models/chapter_model.dart';
 import 'package:test_app/models/comic_model.dart';
-import 'package:test_app/responses/chapter_response.dart';
+import 'package:test_app/models/response/response_detail_comic.dart';
+import 'package:test_app/models/response/response_page.dart';
 import 'package:test_app/sqflite/sqflite.dart';
+import 'package:test_app/widgets/image/list_images.dart';
 import 'package:test_app/widgets/sidebar_chapter/sidebar_chapter.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ReadPage extends StatefulWidget {
-  final ChapterModel chapterModel;
-  final ComicModel comicModel;
+  final Chapter chapter;
+  final Comic comicModel;
 
   const ReadPage(
-      {super.key, required this.chapterModel, required this.comicModel});
+      {super.key, required this.chapter, required this.comicModel});
 
   @override
   State<ReadPage> createState() => _ReadPageState();
 }
 
 class _ReadPageState extends State<ReadPage> {
-  late ChapterModel chapterCurrent;
-  late ChapterModel chapterNext;
-  late ChapterModel chapterBefore;
+  late Chapter chapterCurrent;
+  late Chapter chapterNext;
+  late Chapter chapterBefore;
   final DbHelper dbHelper = DbHelper();
-  late final WebViewController _controller;
   bool isScrollDown = false;
-  late List<ChapterModel> chapterList;
+  late List<Chapter> chapterList;
   bool isChapterNext = false;
   bool isChapterBefore = false;
 
   bool loading = true;
-  String css =
-      "#header,.notify_block,.top,.reading-control,#back-to-top,.mrt5.mrb5.text-center.col-sm-6,.top.bottom,.footer,.reading > .container{display: none !important;}";
 
-  late Future<ChapterResponse> chapterData;
+  late Future<ResponseDetail?> chapterData;
+  late Future<ResponsePage?> pageData;
   bool loadingChapter = false;
 
-  Future<ChapterResponse> fetchAlbum() async {
-    ComicModel comicModel = widget.comicModel;
+  Future<ResponsePage?> fetchAlbum(String numberChapter) async {
+    Comic comicModel = widget.comicModel;
     setState(() {
       loadingChapter = true;
     });
-    final data = await HttpApi()
-        .get('${dotenv.env['PUBLIC_URL_API']}/chapters?key=${comicModel.url}');
+    final data = await getImages(comicModel.id, numberChapter, comicModel.nameEn);
 
-    await dbHelper.upsertHistory(
-        widget.comicModel.id ?? "0",
-        widget.chapterModel.id ?? "0",
-        widget.chapterModel.name ?? "",
-        widget.chapterModel.url ?? "");
+    // await dbHelper.upsertHistory(
+    //     widget.comicModel.id,
+    //     widget.chapter.id ?? "0",
+    //     widget.chapter.name ?? "","");
 
-    ChapterResponse chapterResponse = ChapterResponse.fromJson(data);
     setState(() {
-      chapterList = chapterResponse.chapters!;
+      loading = false;
+      loadingChapter = false;
+    });
+    // _loadChapterNext();
+
+    return data;
+  }
+
+  Future<ResponseDetail?> fetchDetail() async {
+    Comic comicModel = widget.comicModel;
+    setState(() {
+      loadingChapter = true;
+    });
+    final data = await getListChapter(comicModel.id);
+    // await dbHelper.upsertHistory(
+    //     widget.comicModel.id,
+    //     widget.chapter.id ?? "0",
+    //     widget.chapter.name ?? "","");
+
+    setState(() {
+      chapterList = data!.result!.chapters ?? [];
       loadingChapter = false;
     });
     _loadChapterNext();
 
-    return chapterResponse;
+    return data;
   }
 
   @override
   void initState() {
     super.initState();
-    chapterData = fetchAlbum();
-    chapterCurrent = widget.chapterModel;
-
-    late final PlatformWebViewControllerCreationParams params;
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    final WebViewController controller =
-        WebViewController.fromPlatformCreationParams(params);
-
-    controller
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            if (progress > 20) {
-              setState(() {
-                _hideCss().then((value) => loading = false);
-                _controller.runJavaScript('''window.onscroll = function(e) {
-                  // print "false" if direction is down and "true" if up
-                  Toaster.postMessage(this.oldScroll > this.scrollY);
-                  this.oldScroll = this.scrollY;
-                }''');
-              });
-            }
-          },
-          onPageStarted: (String url) {
-            _controller.clearCache();
-            _controller.clearLocalStorage();
-            setState(() {
-              loading = true;
-            });
-          },
-          onPageFinished: (String url) {},
-          onWebResourceError: (WebResourceError error) {},
-          onNavigationRequest: (request) {
-            if (!request.url.startsWith('https://www')) {
-              print('blocking navigation to $request}');
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-          onUrlChange: (UrlChange change) {
-            debugPrint('url change to ${change.url}');
-          },
-          onHttpAuthRequest: (HttpAuthRequest request) {},
-        ),
-      )
-      ..addJavaScriptChannel(
-        'Toaster',
-        onMessageReceived: (JavaScriptMessage message) {
-          setState(() {
-            isScrollDown = message.message.toLowerCase() == 'false';
-          });
-        },
-      )
-      ..loadRequest(Uri.parse(widget.chapterModel.url ?? ""));
-
-    if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(false);
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
-
-    _controller = controller;
+    pageData = fetchAlbum(widget.chapter.numberChapter ?? "1");
+    chapterData = fetchDetail();
+    chapterCurrent = widget.chapter;
   }
 
   @override
@@ -149,7 +95,7 @@ class _ReadPageState extends State<ReadPage> {
         elevation: 0,
         title: Center(
             child: Text(
-          chapterCurrent.name ?? "",
+          "Chapter ${chapterCurrent.numberChapter}",
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -219,7 +165,7 @@ class _ReadPageState extends State<ReadPage> {
                 size: 50,
               ),
             )
-          : WebViewWidget(controller: _controller),
+          : ListImages(pageImages: pageData,),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FractionallySizedBox(
         widthFactor: 0.3,
@@ -328,23 +274,13 @@ class _ReadPageState extends State<ReadPage> {
     );
   }
 
-  Future<void> _hideCss() {
-    return _controller.runJavaScript(
-      "var style = document.createElement('style'); style.innerHTML = '$css'; document.head.appendChild(style);",
-    );
-  }
 
-  void _setChapterCurrent(ChapterModel chapterModel) {
+  void _setChapterCurrent(Chapter chapter) {
     setState(() {
       loading = true;
-      chapterCurrent = chapterModel;
-      dbHelper.upsertHistory(
-          widget.comicModel.id ?? "0",
-          chapterModel.id ?? "0",
-          chapterModel.name ?? "",
-          chapterModel.url ?? "");
+      chapterCurrent = chapter;
+      pageData = fetchAlbum(chapter.numberChapter ?? "1");
     });
-    _controller.loadRequest(Uri.parse(chapterModel.url ?? ""));
 
     _loadChapterNext();
   }

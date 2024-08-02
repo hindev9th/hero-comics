@@ -6,7 +6,7 @@ import 'package:test_app/pages/detail_page.dart';
 import 'package:test_app/widgets/disposing_network_image.dart';
 
 class ItemComic extends StatefulWidget {
-  final ComicModel comicModel;
+  final Comic comicModel;
 
   const ItemComic({super.key, required this.comicModel});
 
@@ -38,7 +38,7 @@ class _ItemComicState extends State<ItemComic> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: DisposingNetworkImage(
-                image: comicModel.image ?? "",
+                image: comicModel.photo,
               ),
             ),
             Positioned(
@@ -47,7 +47,7 @@ class _ItemComicState extends State<ItemComic> {
               right: 10,
               height: 40,
               child: Text(
-                comicModel.name ?? "",
+                comicModel.name ,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -68,7 +68,7 @@ class _ItemComicState extends State<ItemComic> {
               left: 10,
               right: 10,
               child: Text(
-                comicModel.chapter!.name ?? "",
+                "Chapter ${comicModel.chapterLatest[0]}" ,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

@@ -62,7 +62,6 @@ class _LoginPageState extends State<LoginPage> {
           });
         } else {
           toastification.show(
-            context: context,
             icon: const Icon(Icons.error),
             type: ToastificationType.error,
             style: ToastificationStyle.flat,
@@ -89,7 +88,6 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       toastification.show(
-        context: context,
         icon: const Icon(Icons.error),
         type: ToastificationType.error,
         style: ToastificationStyle.flat,

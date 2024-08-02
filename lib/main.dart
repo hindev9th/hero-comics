@@ -4,8 +4,12 @@ import 'package:test_app/config/colors.dart';
 import 'package:test_app/sqflite/sqflite.dart';
 import 'package:test_app/widgets/bottom_navigation.dart';
 import 'package:toastification/toastification.dart';
+import 'package:dart_json_mapper_flutter/dart_json_mapper_flutter.dart' show flutterAdapter;
+import 'package:test_app/models/model.dart';
+import 'package:test_app/models/model.mapper.g.dart' show initializeJsonMapper;
 
 Future<void> main() async {
+  initializeJsonMapper(adapters: [flutterAdapter]);
   await dotenv.load();
   await DbHelper().initDB();
   runApp(const MyApp());
